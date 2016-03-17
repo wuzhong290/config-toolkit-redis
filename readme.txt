@@ -1,4 +1,4 @@
-${rootNode}/${version}/${key}构成了key名称
+${rootNode}&${version}&${key}构成了key名称
 
 每一个RedisConfigGroup消息，都有一组key=channelTopic.
 1、初始化获取 利用strings数据类型及操作,通过key获取信息
