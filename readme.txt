@@ -7,6 +7,11 @@ ${rootNode}/${version}/${key}构成了key名称
 2、实时跟新利用 redis Pub/Sub"发布/订阅" 进行  通过监听channelTopic实时进行跟新
 
 
+3、key的序列化采用StringRedisSerializer
+   value的序列化采用Jackson2JsonRedisSerializer
+   channelTopic的监听序列化也是采用Jackson2JsonRedisSerializer
+4、所以往redis上发送配置信息时要配置好序列化类
+
 
 
 
