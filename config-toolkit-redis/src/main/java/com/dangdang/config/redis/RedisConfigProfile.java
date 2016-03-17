@@ -7,6 +7,7 @@ import com.dangdang.config.service.ConfigProfile;
  */
 public class RedisConfigProfile extends ConfigProfile {
 
+    private String rootNode;
     private int database = 0;
     private String host = "localhost";
     private String password;
@@ -130,5 +131,13 @@ public class RedisConfigProfile extends ConfigProfile {
 
     public void setPool(Pool pool) {
         this.pool = pool;
+    }
+
+    public String getRootNode() {
+        return rootNode;
+    }
+
+    public void setRootNode(String rootNode) {
+        this.rootNode = rootNode;
     }
 }

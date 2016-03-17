@@ -4,30 +4,30 @@ import com.dangdang.config.service.ConfigGroup;
 import com.dangdang.config.service.GeneralConfigGroup;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.redis.connection.DataType;
-import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * Created by wuzhong on 2016/3/16.
  */
-public class RedisConfigGroup<T> extends GeneralConfigGroup {
+public class RedisConfigGroup extends GeneralConfigGroup {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -3826360597354359856L;
 
     private RedisConfigProfile configProfile;
 
     private String key;
 
+    private Thread shutdownHook;
+
     private RedisTemplate redisTemplate;
+
 
     private RedisMessageListenerContainer container;
 
@@ -51,61 +51,66 @@ public class RedisConfigGroup<T> extends GeneralConfigGroup {
         JedisConnectionFactory factory = new JedisConnectionFactory();
         factory.setHostName(configProfile.getHost());
         factory.setPort(configProfile.getPort());
+        factory.afterPropertiesSet();
+
         redisTemplate = new RedisTemplate();
+        StringRedisSerializer keySerializer = new StringRedisSerializer();
+        Jackson2JsonRedisSerializer valueRedisSerializer = new Jackson2JsonRedisSerializer(RedisConfig.class);
+        redisTemplate.setKeySerializer(keySerializer);
+        redisTemplate.setValueSerializer(valueRedisSerializer);
         redisTemplate.setConnectionFactory(factory);
+        redisTemplate.afterPropertiesSet();
 
         container = new RedisMessageListenerContainer();
         container.setConnectionFactory(factory);
-        container.addMessageListener(listener, new ChannelTopic(key));
+        container.addMessageListener(listener, new ChannelTopic(getRootNodeVersionKey()));
+        container.afterPropertiesSet();
+        container.start();
 
         loadNode();
+
+        registerShutdownHook();
     }
 
     //加载节点信息
     void loadNode() {
-        if(redisTemplate.hasKey(key)){
-            DataType dt = redisTemplate.type(key);
+        if(redisTemplate.hasKey(getRootNodeVersionKey())){
+            DataType dt = redisTemplate.type(getRootNodeVersionKey());
             if (StringUtils.equals(dt.code(), "string")) {
-                ValueOperations<Object, T> ops =redisTemplate.opsForValue();
-                T value = ops.get(key);
-                //TODO 通过value进行super.put();super.putAll();
-            } else if (StringUtils.equals(dt.code(), "list")) {
-                ListOperations<Object, T> ops =redisTemplate.opsForList();
-                List<T> value = ops.range(key, 0, -1);
-                //TODO 通过value进行super.put();super.putAll();
-            } else if (StringUtils.equals(dt.code(), "set")) {
-                SetOperations<Object, T> ops =redisTemplate.opsForSet();
-                Set<T> value = ops.members(key);
-                //TODO 通过value进行super.put();super.putAll();
-            } else if (StringUtils.equals(dt.code(), "zset")) {
-                ZSetOperations<Object, T> ops =redisTemplate.opsForZSet();
-                Set<T> value = ops.range(key, 0, -1);
-                //TODO 通过value进行super.put();super.putAll();
-            } else if (StringUtils.equals(dt.code(), "hash")) {
-                HashOperations<Object, Object, Object> ops =redisTemplate.opsForHash();
-                Map value = ops.entries(key);
+                ValueOperations<Object, Object> ops =redisTemplate.opsForValue();
+                Object value = ops.get(getRootNodeVersionKey());
+                System.out.println("");
                 //TODO 通过value进行super.put();super.putAll();
             }
         }
     }
 
     //加载节点信息
-    void loadNode(Message message, byte[] bytes) {
-        if (message == null) {
+    void loadNode(Object boy, String channelTopic) {
+        if (boy == null) {
             //不做任何处理
-        } else if (message.getClass().isArray()) {
+        } else if (boy instanceof RedisConfig) {
             //TODO 通过message进行super.put();super.putAll();
-        } else if (message instanceof List<?>) {
-            //TODO 通过message进行super.put();super.putAll();
-        } else if (message instanceof Map<?, ?>) {
-            //TODO 通过message进行super.put();super.putAll();
-        } else {
-            //
         }
     }
 
-    @Override
-    public void close() throws IOException {
+    public String getRootNodeVersionKey() {
+        return  configProfile.getRootNode() +"&" + configProfile.getVersion()  +"&" + key;
+    }
+
+    public void registerShutdownHook() {
+        if(this.shutdownHook == null) {
+            this.shutdownHook = new Thread() {
+                public void run() {
+                    RedisConfigGroup.this.close();
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+        }
+
+    }
+
+    public void close() {
         if(container != null){
             try {
                 container.destroy();
