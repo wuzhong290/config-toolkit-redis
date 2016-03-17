@@ -12,6 +12,8 @@ ${rootNode}&${version}&${key}构成了key名称
    channelTopic的监听序列化也是采用Jackson2JsonRedisSerializer
 4、所以往redis上发送配置信息时要配置好序列化类
 
+5、配置信息格式必须为：RedisConfig的格式
+
 
 
 

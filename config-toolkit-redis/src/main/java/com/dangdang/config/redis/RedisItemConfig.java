@@ -10,32 +10,13 @@ public class RedisItemConfig implements Serializable {
 
     private static final long serialVersionUID = 3237435926437337908L;
 
-    private String suffix;
-    private String prefix;
+    private Map<String,String> configs;
 
-    private Map<String,Object> configs;
-
-    public String getSuffix() {
-        return suffix;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public Map<String, Object> getConfigs() {
+    public Map<String, String> getConfigs() {
         return configs;
     }
 
-    public void setConfigs(Map<String, Object> configs) {
+    public void setConfigs(Map<String, String> configs) {
         this.configs = configs;
     }
 }

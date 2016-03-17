@@ -78,9 +78,8 @@ public class RedisConfigGroup extends GeneralConfigGroup {
             DataType dt = redisTemplate.type(getRootNodeVersionKey());
             if (StringUtils.equals(dt.code(), "string")) {
                 ValueOperations<Object, Object> ops =redisTemplate.opsForValue();
-                Object value = ops.get(getRootNodeVersionKey());
-                System.out.println("");
-                //TODO 通过value进行super.put();super.putAll();
+                RedisConfig value = (RedisConfig)ops.get(getRootNodeVersionKey());
+                redisConfigUpdate(value);
             }
         }
     }
@@ -90,7 +89,15 @@ public class RedisConfigGroup extends GeneralConfigGroup {
         if (boy == null) {
             //不做任何处理
         } else if (boy instanceof RedisConfig) {
-            //TODO 通过message进行super.put();super.putAll();
+            redisConfigUpdate((RedisConfig)boy);
+        }
+    }
+
+    void redisConfigUpdate(RedisConfig value){
+        if(null != value && null != value.getItemConfigs() && value.getItemConfigs().size()>0){
+            for (RedisItemConfig item : value.getItemConfigs()){
+                super.putAll(item.getConfigs());
+            }
         }
     }
 
