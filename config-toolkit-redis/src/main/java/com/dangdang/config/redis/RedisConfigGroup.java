@@ -1,8 +1,10 @@
 package com.dangdang.config.redis;
 
+import com.alibaba.fastjson.JSON;
 import com.dangdang.config.service.ConfigGroup;
 import com.dangdang.config.service.GeneralConfigGroup;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -11,6 +13,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
@@ -19,6 +22,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfigGroup extends GeneralConfigGroup {
 
     private static final long serialVersionUID = -3826360597354359856L;
+
+    private Logger logger = Logger.getLogger(RedisConfigGroup.class);
 
     private RedisConfigProfile configProfile;
 
@@ -54,8 +59,8 @@ public class RedisConfigGroup extends GeneralConfigGroup {
         factory.afterPropertiesSet();
 
         redisTemplate = new RedisTemplate();
-        StringRedisSerializer keySerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer valueRedisSerializer = new Jackson2JsonRedisSerializer(RedisConfig.class);
+        RedisSerializer keySerializer = new StringRedisSerializer();
+        RedisSerializer valueRedisSerializer = new Jackson2JsonRedisSerializer(RedisConfig.class);
         redisTemplate.setKeySerializer(keySerializer);
         redisTemplate.setValueSerializer(valueRedisSerializer);
         redisTemplate.setConnectionFactory(factory);
@@ -79,6 +84,7 @@ public class RedisConfigGroup extends GeneralConfigGroup {
             if (StringUtils.equals(dt.code(), "string")) {
                 ValueOperations<Object, Object> ops =redisTemplate.opsForValue();
                 RedisConfig value = (RedisConfig)ops.get(getRootNodeVersionKey());
+                logger.info("初始化配置：" + getRootNodeVersionKey() + ":" + JSON.toJSONString(value));
                 redisConfigUpdate(value);
             }
         }
