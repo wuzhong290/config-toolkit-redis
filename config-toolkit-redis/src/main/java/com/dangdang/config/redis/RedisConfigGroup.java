@@ -56,6 +56,7 @@ public class RedisConfigGroup extends GeneralConfigGroup {
         JedisConnectionFactory factory = new JedisConnectionFactory();
         factory.setHostName(configProfile.getHost());
         factory.setPort(configProfile.getPort());
+        factory.setPassword(configProfile.getPassword());
         factory.afterPropertiesSet();
 
         redisTemplate = new RedisTemplate();
@@ -114,6 +115,7 @@ public class RedisConfigGroup extends GeneralConfigGroup {
     public void registerShutdownHook() {
         if(this.shutdownHook == null) {
             this.shutdownHook = new Thread() {
+                @Override
                 public void run() {
                     RedisConfigGroup.this.close();
                 }
@@ -123,6 +125,7 @@ public class RedisConfigGroup extends GeneralConfigGroup {
 
     }
 
+    @Override
     public void close() {
         if(container != null){
             try {
